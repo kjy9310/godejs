@@ -1,10 +1,39 @@
 package main
 
 import (
+	"fmt"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"net/http"
 )
+
+var (
+	upgrader = websocket.Upgrader{}
+)
+
+func hello(c echo.Context) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+
+	for {
+		// Write
+		err := ws.WriteMessage(websocket.TextMessage, []byte("Hello, Client!"))
+		if err != nil {
+			c.Logger().Error(err)
+		}
+
+		// Read
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			c.Logger().Error(err)
+		}
+		fmt.Printf("%s\n", msg)
+	}
+}
 
 func main() {
 	e := echo.New()
@@ -14,15 +43,7 @@ func main() {
 	e.Use(middleware.CORS())
 
 	e.File("/", "build/index.html")
-	e.GET("/faqs", func(c echo.Context) error {
-		return c.File("/Users/kimjuyoun/dev/test/webサイト-質問-回答reduced.csv")
-	})
-	e.GET("/examples", func(c echo.Context) error {
-		return c.File("/Users/kimjuyoun/dev/test/インポート-質問例.csv")
-	})
-	e.GET("/dictionaries", func(c echo.Context) error {
-		return c.File("/Users/kimjuyoun/dev/test/インポート-辞書.csv")
-	})
-	//e.Static("/csv", "/Users/kimjuyoun/dev/test/")
+	e.Static("/static", "build/static")
+	e.GET("/ws", hello)
 	e.Logger.Fatal(e.Start(":1323"))
 }

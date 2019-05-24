@@ -3,6 +3,31 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
+
+    let loc = window.location;
+    let uri = 'ws:';
+
+    if (loc.protocol === 'https:') {
+      uri = 'wss:';
+    }
+    uri += '//' + loc.host;
+    uri += loc.pathname + 'ws';
+
+    const ws = new WebSocket(uri)
+
+    ws.onopen = function() {
+      console.log('Connected')
+    }
+
+    ws.onmessage = function(evt) {
+      const out = document.getElementById('output');
+      out.innerHTML += evt.data + '<br>';
+    }
+
+    setInterval(function() {
+      ws.send('Hello, Server!');
+    }, 1000);
+
   return (
     <div className="App">
       <header className="App-header">

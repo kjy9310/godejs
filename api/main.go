@@ -6,6 +6,8 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 var (
@@ -31,7 +33,15 @@ func hello(c echo.Context) error {
 		if err != nil {
 			c.Logger().Error(err)
 		}
+
 		fmt.Printf("%s\n", msg)
+		unixStampString := msg[0:10]
+		fmt.Println("unixStampString : ",string(unixStampString))
+		unixStamp, err := strconv.ParseInt(string(unixStampString), 10, 64)
+		if (err != nil){
+			fmt.Println("!!!!ERR!!!!", err)
+		}
+		fmt.Println(time.Unix(int64(unixStamp), 0))
 	}
 }
 

@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"time"
 )
-
+var (
+	upgrader = websocket.Upgrader{}
+)
 func Listen(c echo.Context) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {

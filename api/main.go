@@ -11,7 +11,9 @@ import (
 )
 
 var (
+	clients = make(map[*websocket.Conn]bool)
 	upgrader = websocket.Upgrader{}
+	channel = make(chan string)
 )
 
 func hello(c echo.Context) error {
@@ -20,20 +22,15 @@ func hello(c echo.Context) error {
 		return err
 	}
 	defer ws.Close()
-
+	clients[ws] = true
+	ws.WriteMessage(websocket.TextMessage, []byte("connected"))
 	for {
-		// Write
-		err := ws.WriteMessage(websocket.TextMessage, []byte("Hello, Client!"))
-		if err != nil {
-			c.Logger().Error(err)
-		}
-
 		// Read
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
 			c.Logger().Error(err)
 		}
-
+		channel <- string(msg)
 		fmt.Printf("%s\n", msg)
 		unixStampString := msg[0:10]
 		fmt.Println("unixStampString : ",string(unixStampString))
@@ -45,8 +42,23 @@ func hello(c echo.Context) error {
 	}
 }
 
+func writeAll(){
+	for {
+		for ws := range clients {
+			err := ws.WriteMessage(websocket.TextMessage, []byte(<-channel))
+			if err != nil {
+				fmt.Println(err)
+				ws.Close()
+                delete(clients, ws)
+			}
+		}
+	}
+}
+
 func main() {
 	e := echo.New()
+	
+
 	e.GET("/test", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
@@ -55,5 +67,6 @@ func main() {
 	e.File("/", "build/index.html")
 	e.Static("/static", "build/static")
 	e.GET("/ws", hello)
+	go writeAll()
 	e.Logger.Fatal(e.Start(":1323"))
 }

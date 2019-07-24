@@ -21,12 +21,12 @@ function App() {
 
     ws.onmessage = function(evt) {
       const out = document.getElementById('output');
-      out.innerHTML += evt.data + '<br>';
+      out.innerHTML = evt.data + '<br>';
     }
 
     setInterval(function() {
 	    ws.send(Math.floor(new Date().getTime()/1000) + 'Hello, Server!');
-    }, 1000);
+    }, 5000);
 
   return (
     <div className="App">
@@ -44,6 +44,7 @@ function App() {
           Learn React
         </a>
       </header>
+      <div id="output"></div>
     </div>
   );
 }

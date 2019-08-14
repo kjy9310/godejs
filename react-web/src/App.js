@@ -25,7 +25,7 @@ function App() {
     }
 
     setInterval(function() {
-	    ws.send(Math.floor(new Date().getTime()/1000) + 'Hello, Server!');
+	    ws.send(Math.floor(new Date().getTime()) + 'Hello, Server!');
     }, 5000);
 
   return (

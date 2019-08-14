@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"godejs/api/pingSync"
 )
 
 var (
-	clients = make(map[*websocket.Conn]bool)
+	clients  = make(map[*websocket.Conn]bool)
 	upgrader = websocket.Upgrader{}
-	channel = make(chan string)
+	channel  = make(chan string)
 )
 
 func hello(c echo.Context) error {
@@ -30,34 +32,37 @@ func hello(c echo.Context) error {
 		if err != nil {
 			c.Logger().Error(err)
 		}
-		channel <- string(msg)
 		fmt.Printf("%s\n", msg)
-		unixStampString := msg[0:10]
-		fmt.Println("unixStampString : ",string(unixStampString))
+		unixStampString := msg[0:13]
+		fmt.Println("client unixStampString : ", string(unixStampString))
 		unixStamp, err := strconv.ParseInt(string(unixStampString), 10, 64)
-		if (err != nil){
+		if err != nil {
 			fmt.Println("!!!!ERR!!!!", err)
 		}
-		fmt.Println(time.Unix(int64(unixStamp), 0))
+		fmt.Println("client : ", time.Unix(0, int64(unixStamp)*int64(time.Millisecond)))
+		fmt.Println("servertime : ", int64(time.Now().UnixNano()/1000000))
+		fmt.Println("server : ", time.Unix(0, int64(time.Now().UnixNano()/1000000)*int64(time.Millisecond)))
+		channel <- string(strconv.Itoa(int(time.Now().UnixNano()/1000000)))
 	}
 }
 
-func writeAll(){
+func writeAll() {
 	for {
 		for ws := range clients {
 			err := ws.WriteMessage(websocket.TextMessage, []byte(<-channel))
 			if err != nil {
 				fmt.Println(err)
 				ws.Close()
-                delete(clients, ws)
+				delete(clients, ws)
 			}
 		}
 	}
 }
 
 func main() {
+	pingSync.Test()
+
 	e := echo.New()
-	
 
 	e.GET("/test", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")

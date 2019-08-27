@@ -6,6 +6,7 @@ function App() {
 
     let loc = window.location;
     let uri = 'ws:';
+	let sentTimestamp, receivedTimestamp = 0;
 
     if (loc.protocol === 'https:') {
       uri = 'wss:';
@@ -20,11 +21,14 @@ function App() {
     }
 
     ws.onmessage = function(evt) {
-      const out = document.getElementById('output');
-      out.innerHTML = evt.data + '<br>';
+	console.log("time in server : ", new Date(evt.data))
+      console.log("server delay : ",parseInt(evt.data)-sentTimestamp);
+	receivedTimestamp = Math.floor(new Date().getTime());
+	console.log('ping : ',receivedTimestamp-sentTimestamp)
     }
 
     setInterval(function() {
+	sentTimestamp = Math.floor(new Date().getTime());
 	    ws.send(Math.floor(new Date().getTime()) + 'Hello, Server!');
     }, 5000);
 
